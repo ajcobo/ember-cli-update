@@ -147,4 +147,11 @@ describe(getProjectOptions, function() {
     expect(yield getProjectOptions(packageJson))
       .to.deep.equal(['app', 'yarn']);
   }));
+
+  it('detects blueprint', co.wrap(function*() {
+    let packageJson = {
+    };
+
+    expect(yield getProjectOptions(packageJson, {})).to.deep.equal(['blueprint']);
+  }));
 });

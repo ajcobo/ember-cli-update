@@ -5,6 +5,7 @@ const { describe, it } = require('../helpers/mocha');
 const { expect } = require('../helpers/chai');
 const sinon = require('sinon');
 const co = require('co');
+const fs = require('fs-extra');
 const {
   buildTmp,
   processExit,
@@ -50,13 +51,16 @@ describe(function() {
     runCodemods,
     listCodemods,
     createCustomDiff,
-    commitMessage
+    commitMessage,
+    beforeMerge = () => Promise.resolve()
   }) {
     tmpPath = yield buildTmp({
       fixturesPath,
       commitMessage,
       dirty
     });
+
+    yield beforeMerge();
 
     process.chdir(tmpPath);
 
@@ -284,6 +288,100 @@ applicable codemods: ember-modules-codemod, ember-qunit-codemod, ember-test-help
     }) => {
       fixtureCompare({
         mergeFixtures: 'test/fixtures/custom/merge/my-custom-app'
+      });
+
+      assertNoUnstaged(status);
+    });
+  });
+
+  it('can use a local blueprint', function() {
+    this.timeout(3 * 60 * 1000);
+
+    return merge({
+      fixturesPath: 'test/fixtures/local-blueprint-app/local',
+      commitMessage: 'my-app',
+      to: '0.0.2',
+      beforeMerge: co.wrap(function*() {
+        let blueprintPath = yield buildTmp({
+          fixturesPath: 'test/fixtures/local-blueprint'
+        });
+
+        let newBlueprintPath = path.resolve(tmpPath, '../local-blueprint');
+
+        yield fs.remove(newBlueprintPath);
+
+        yield fs.move(blueprintPath, newBlueprintPath);
+      })
+    }).then(({
+      status
+    }) => {
+      fixtureCompare({
+        mergeFixtures: 'test/fixtures/local-blueprint-app/merge/my-app'
+      });
+
+      assertNoUnstaged(status);
+    });
+  });
+
+  it('can use a remote blueprint', function() {
+    this.timeout(3 * 60 * 1000);
+
+    return merge({
+      fixturesPath: 'test/fixtures/remote-blueprint-app/local',
+      commitMessage: 'my-app',
+      to: '0.0.14'
+    }).then(({
+      status
+    }) => {
+      fixtureCompare({
+        mergeFixtures: 'test/fixtures/remote-blueprint-app/merge/my-app'
+      });
+
+      assertNoUnstaged(status);
+    });
+  });
+
+  it('can use an npm blueprint', function() {
+    this.timeout(3 * 60 * 1000);
+
+    return merge({
+      fixturesPath: 'test/fixtures/npm-blueprint-app/local',
+      commitMessage: 'my-app',
+      to: '0.0.4'
+    }).then(({
+      status
+    }) => {
+      fixtureCompare({
+        mergeFixtures: 'test/fixtures/npm-blueprint-app/merge/my-app'
+      });
+
+      assertNoUnstaged(status);
+    });
+  });
+
+  it('can use a legacy blueprint', function() {
+    this.timeout(3 * 60 * 1000);
+
+    return merge({
+      fixturesPath: 'test/fixtures/legacy-blueprint-app/local',
+      commitMessage: 'my-app',
+      to: '0.0.2',
+      beforeMerge: co.wrap(function*() {
+        let blueprintPath = yield buildTmp({
+          fixturesPath: 'test/fixtures/legacy-blueprint'
+        });
+
+        let newBlueprintPath = path.resolve(tmpPath, '../legacy-blueprint');
+
+        yield fs.remove(newBlueprintPath);
+
+        yield fs.move(blueprintPath, newBlueprintPath);
+      })
+    }).then(({
+      status
+    }) => {
+      fixtureCompare({
+        mergeFixtures: 'test/fixtures/legacy-blueprint-app/merge/my-app'
       });
 
       assertNoUnstaged(status);

@@ -1,0 +1,10 @@
+{
+  "ember-cli-update": {
+    "blueprints": [
+      {
+        "name": "ember-cli-update-npm-blueprint-test",
+        "version": "0.0.3"
+      }
+    ]
+  }
+}

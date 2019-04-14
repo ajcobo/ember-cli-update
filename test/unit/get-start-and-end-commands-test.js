@@ -57,6 +57,7 @@ describe(_getStartAndEndCommands, function() {
       projectOptions: ['app'],
       packageName,
       commandName,
+      blueprint: undefined,
       startOptions: {
         packageVersion: startVersion
       },
